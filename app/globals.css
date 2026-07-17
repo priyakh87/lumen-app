@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== LIGHT (default) ===== */
+:root {
+  --bg: #f6f7fb;
+  --bg-2: #eef1f8;
+  --fg: #0b1220;
+  --fg-muted: #4a5568;
+  --fg-subtle: #6b7280;
+  --panel: rgba(255,255,255,0.65);
+  --panel-strong: rgba(255,255,255,0.85);
+  --panel-subtle: rgba(255,255,255,0.45);
+  --border: rgba(15,23,42,0.10);
+  --border-strong: rgba(15,23,42,0.16);
+  --shadow: 0 20px 60px -20px rgba(15,23,42,0.18);
+  --shadow-strong: 0 30px 80px -20px rgba(15,23,42,0.28);
+  --highlight: rgba(255,255,255,0.9);
+  --highlight-2: rgba(255,255,255,0.4);
+  --accent-a: #10b981; /* emerald */
+  --accent-b: #14b8a6; /* teal */
+  --accent-c: #0ea5e9; /* sky */
+  --accent-ink: #4f46e5; /* indigo */
+  --input-bg: rgba(255,255,255,0.7);
+  --input-bg-focus: rgba(255,255,255,0.95);
+  --ring: rgba(20,184,166,0.35);
+  --orb-1: rgba(16,185,129,0.35);
+  --orb-2: rgba(14,165,233,0.28);
+  --orb-3: rgba(20,184,166,0.30);
+  --orb-4: rgba(99,102,241,0.20);
+}
+
+.dark {
+  --bg: #05070d;
+  --bg-2: #0b0f1a;
+  --fg: #f8fafc;
+  --fg-muted: rgba(248,250,252,0.72);
+  --fg-subtle: rgba(248,250,252,0.5);
+  --panel: rgba(255,255,255,0.06);
+  --panel-strong: rgba(255,255,255,0.11);
+  --panel-subtle: rgba(255,255,255,0.035);
+  --border: rgba(255,255,255,0.10);
+  --border-strong: rgba(255,255,255,0.18);
+  --shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+  --shadow-strong: 0 30px 80px -20px rgba(0,0,0,0.75);
+  --highlight: rgba(255,255,255,0.18);
+  --highlight-2: rgba(255,255,255,0.05);
+  --accent-a: #34d399;
+  --accent-b: #2dd4bf;
+  --accent-c: #38bdf8;
+  --accent-ink: #818cf8;
+  --input-bg: rgba(255,255,255,0.05);
+  --input-bg-focus: rgba(255,255,255,0.10);
+  --ring: rgba(45,212,191,0.35);
+  --orb-1: rgba(52,211,153,0.35);
+  --orb-2: rgba(56,189,248,0.30);
+  --orb-3: rgba(45,212,191,0.28);
+  --orb-4: rgba(129,140,248,0.22);
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  overflow-x: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* ==== Liquid glass ==== */
+.glass {
+  background: linear-gradient(135deg, var(--panel), var(--panel-subtle));
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid var(--border);
+  box-shadow:
+    inset 0 1px 0 var(--highlight),
+    inset 0 -1px 0 var(--highlight-2),
+    var(--shadow);
+}
+.glass-strong {
+  background: linear-gradient(135deg, var(--panel-strong), var(--panel));
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid var(--border-strong);
+  box-shadow:
+    inset 0 1px 0 var(--highlight),
+    inset 0 -1px 0 var(--highlight-2),
+    var(--shadow-strong);
+}
+.glass-subtle {
+  background: linear-gradient(135deg, var(--panel-subtle), transparent);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid var(--border);
+}
+.glass-input {
+  background: var(--input-bg);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  transition: all 0.2s ease;
+}
+.glass-input::placeholder { color: var(--fg-subtle); }
+.glass-input:focus {
+  background: var(--input-bg-focus);
+  border-color: var(--accent-b);
+  box-shadow: 0 0 0 4px var(--ring);
+  outline: none;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent-a) 0%, var(--accent-b) 50%, var(--accent-c) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-fg { color: var(--fg); }
+.text-fg-muted { color: var(--fg-muted); }
+.text-fg-subtle { color: var(--fg-subtle); }
+.border-glass { border-color: var(--border); }
+.bg-accent-grad { background: linear-gradient(135deg, var(--accent-a), var(--accent-b), var(--accent-c)); }
+.ring-accent { box-shadow: 0 0 0 2px var(--accent-b); }
+
+.orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-40px) scale(1.05); }
+  66% { transform: translate(-25px,25px) scale(0.95); }
+}
+.animate-float { animation: float 20s ease-in-out infinite; }
+.animate-float-slow { animation: float 28s ease-in-out infinite; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+::-webkit-scrollbar-track { background: transparent; }
