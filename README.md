@@ -2,8 +2,6 @@
 
 A beautifully minimal appointment booking SPA built with **Next.js 15 (App Router)**, **Tailwind + shadcn/ui**, **MongoDB**, and **Google Calendar OAuth**. Features a signature *liquid glass* aesthetic with light/dark mode.
 
-![Lumen screenshot](docs/hero.png)
-
 ## ✨ Features
 
 - **Elegant liquid glass UI** — frosted panels, gradient orbs, mint→teal→sky accent system.
