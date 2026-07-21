@@ -15,6 +15,72 @@ const fmtDate = (d) => d.toISOString().slice(0, 10)
 const humanDate = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 const shortDate = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
+function applyTilt(event) {
+  const el = event.currentTarget
+  if (!(el instanceof HTMLElement)) return
+  const rect = el.getBoundingClientRect()
+  const x = event.clientX - rect.left
+  const y = event.clientY - rect.top
+  const px = (x / rect.width - 0.5) * 2
+  const py = (y / rect.height - 0.5) * 2
+  const rotY = px * 10
+  const rotX = -py * 10
+  el.style.setProperty('--tilt-x', `${rotX}deg`)
+  el.style.setProperty('--tilt-y', `${rotY}deg`)
+  el.style.setProperty('--tilt-spot', `${(x / rect.width) * 100}% ${(y / rect.height) * 100}%`)
+}
+
+function resetTilt(event) {
+  const el = event.currentTarget
+  if (!(el instanceof HTMLElement)) return
+  el.style.setProperty('--tilt-x', '0deg')
+  el.style.setProperty('--tilt-y', '0deg')
+  el.style.setProperty('--tilt-spot', '50% 20%')
+}
+
+const tiltHandlers = { onPointerMove: applyTilt, onPointerLeave: resetTilt }
+
+function ConfettiBurst({ count = 20 }) {
+  const [pieces, setPieces] = useState([])
+
+  useEffect(() => {
+    const colors = ['#facc15', '#34d399', '#60a5fa', '#f472b6', '#a78bfa']
+    const generated = Array.from({ length: count }, (_, index) => ({
+      key: index,
+      left: `${12 + Math.random() * 76}%`,
+      delay: `${Math.random() * 0.4}s`,
+      duration: `${1.3 + Math.random() * 0.6}s`,
+      width: `${6 + Math.random() * 8}px`,
+      height: `${4 + Math.random() * 3}px`,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotate: `${Math.random() * 360}deg`,
+    }))
+    setPieces(generated)
+    const timer = window.setTimeout(() => setPieces([]), 2200)
+    return () => window.clearTimeout(timer)
+  }, [count])
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {pieces.map((piece) => (
+        <span
+          key={piece.key}
+          className="confetti-piece"
+          style={{
+            left: piece.left,
+            width: piece.width,
+            height: piece.height,
+            backgroundColor: piece.color,
+            animationDelay: piece.delay,
+            animationDuration: piece.duration,
+            transform: `rotate(${piece.rotate})`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 function useTheme() {
   const [theme, setTheme] = useState('light')
   useEffect(() => {
@@ -81,23 +147,23 @@ function Hero({ onStart }) {
   return (
     <section className="relative pt-40 pb-24 px-6">
       <div className="max-w-5xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs text-fg-muted mb-8">
+        <div className="hero-animate-item hero-animate-delay-1 inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs text-fg-muted mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           Now booking · {new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
         </div>
-        <h1 className="text-5xl md:text-7xl font-semibold tracking-tight leading-[1.05] text-fg">
+        <h1 className="hero-animate-item hero-animate-delay-2 text-5xl md:text-7xl font-semibold tracking-tight leading-[1.05] text-fg">
           Appointments that feel<br/><span className="gradient-text">effortlessly beautiful.</span>
         </h1>
-        <p className="mt-6 text-fg-muted text-lg md:text-xl max-w-2xl mx-auto">
+        <p className="hero-animate-item hero-animate-delay-3 mt-6 text-fg-muted text-lg md:text-xl max-w-2xl mx-auto">
           A calm, cinematic booking experience — pick a service, choose a time, and you’re set. No back-and-forth.
         </p>
-        <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
-          <button onClick={onStart} className="glass-strong rounded-2xl px-6 py-3 text-fg font-medium inline-flex items-center gap-2 hover:scale-[1.02] transition">
+        <div className="hero-animate-item hero-animate-delay-4 mt-10 flex items-center justify-center gap-3 flex-wrap">
+          <button onClick={onStart} className="glass-strong shimmer-button rounded-2xl px-6 py-3 text-fg font-medium inline-flex items-center gap-2 hover:scale-[1.02] transition">
             Book an appointment <ArrowRight className="w-4 h-4" />
           </button>
           <a href="#services" className="glass rounded-2xl px-6 py-3 text-fg font-medium hover:scale-[1.02] transition">Explore services</a>
         </div>
-        <div className="mt-16 grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+        <div className="hero-animate-item hero-animate-delay-5 mt-16 grid grid-cols-3 gap-4 max-w-2xl mx-auto">
           {[{k:'2,400+',v:'sessions booked'},{k:'4.9★',v:'average rating'},{k:'<30s',v:'to schedule'}].map((s,i)=>(
             <div key={i} className="glass-subtle rounded-2xl px-4 py-4">
               <div className="text-2xl md:text-3xl font-semibold text-fg">{s.k}</div>
@@ -125,7 +191,7 @@ function Services({ services, onPick }) {
           {services.map((s) => {
             const Icon = iconMap[s.icon] || Sparkles
             return (
-              <button key={s.id} onClick={() => onPick(s)} className="text-left glass rounded-3xl p-5 hover:scale-[1.02] transition group relative overflow-hidden">
+              <button key={s.id} onClick={() => onPick(s)} {...tiltHandlers} className="text-left glass tilt-surface rounded-3xl p-5 hover:scale-[1.02] transition group relative overflow-hidden">
                 <div className={`absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl opacity-40 bg-gradient-to-br ${s.color}`} />
                 <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${s.color} flex items-center justify-center shadow-lg`}>
                   <Icon className="w-5 h-5 text-white" />
@@ -280,14 +346,15 @@ function BookingFlow({ services, initialService, onDone }) {
         const accessValue = data.booking?.access || ''
         if (accessValue) window.localStorage.setItem('bookingAccess', accessValue)
       }
-      setResult(data.booking); setStep(3)
+      setResult(data.booking)
+      setStep(3)
     } catch (e) { setError(e.message) } finally { setSubmitting(false) }
   }
 
   return (
     <section id="book" className="px-6 py-16">
       <div className="max-w-3xl mx-auto">
-        <div className="glass-strong rounded-3xl p-6 md:p-8 relative overflow-hidden">
+        <div {...tiltHandlers} className="glass-strong tilt-surface rounded-3xl p-6 md:p-8 relative overflow-hidden">
           <div className="absolute -top-24 -right-24 w-72 h-72 bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-sky-400/20 rounded-full blur-3xl pointer-events-none" />
           <div className="relative">
@@ -305,8 +372,9 @@ function BookingFlow({ services, initialService, onDone }) {
             </div>
             <Stepper step={step} />
 
-            {step === 0 && (
-              <div className="grid sm:grid-cols-2 gap-3">
+            <div key={step}>
+              {step === 0 && (
+                <div className="grid sm:grid-cols-2 gap-3">
                 {services.map(s => {
                   const Icon = iconMap[s.icon] || Sparkles
                   const active = service?.id === s.id
@@ -326,10 +394,10 @@ function BookingFlow({ services, initialService, onDone }) {
                   )
                 })}
               </div>
-            )}
+              )}
 
-            {step === 1 && (
-              <div className="grid md:grid-cols-2 gap-4">
+              {step === 1 && (
+                <div className="grid md:grid-cols-2 gap-4">
                 <Calendar selectedDate={date} onSelect={(d) => { setDate(d); setTime('') }} />
                 <div className="glass-subtle rounded-2xl p-4">
                   <div className="text-fg font-medium text-sm mb-3">{date ? humanDate(date) : 'Pick a date to see times'}</div>
@@ -351,10 +419,10 @@ function BookingFlow({ services, initialService, onDone }) {
                   )}
                 </div>
               </div>
-            )}
+              )}
 
-            {step === 2 && (
-              <div className="grid sm:grid-cols-2 gap-3">
+              {step === 2 && (
+                <div className="grid sm:grid-cols-2 gap-3">
                 <label>
                   <div className="text-xs text-fg-muted mb-1 flex items-center gap-1"><User className="w-3 h-3"/> Full name</div>
                   <input className="glass-input w-full rounded-xl px-4 py-3" placeholder="Ada Lovelace" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
@@ -372,10 +440,10 @@ function BookingFlow({ services, initialService, onDone }) {
                   <textarea rows={3} className="glass-input w-full rounded-xl px-4 py-3 resize-none" placeholder="Anything we should know?" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} />
                 </label>
               </div>
-            )}
+              )}
 
-            {step === 3 && result && (
-              <div className="text-center py-6">
+              {step === 3 && result && (
+                <div className="text-center py-6">
                 <div className="w-16 h-16 rounded-full bg-accent-grad mx-auto flex items-center justify-center mb-4 shadow-xl">
                   <Check className="w-8 h-8 text-white"/>
                 </div>
@@ -409,7 +477,7 @@ function BookingFlow({ services, initialService, onDone }) {
                     Continue <ChevronRight className="w-4 h-4"/>
                   </button>
                 ) : (
-                  <button onClick={submit} disabled={!canNext || submitting} className={`rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2 transition ${canNext && !submitting ? 'bg-accent-grad text-white shadow-lg hover:scale-[1.02]' : 'glass text-fg-subtle opacity-60 cursor-not-allowed'}`}>
+                  <button onClick={submit} disabled={!canNext || submitting} className={`rounded-xl shimmer-button px-5 py-2.5 text-sm inline-flex items-center gap-2 transition ${canNext && !submitting ? 'bg-accent-grad text-white shadow-lg hover:scale-[1.02]' : 'glass text-fg-subtle opacity-60 cursor-not-allowed'}`}>
                     {submitting ? <><Loader2 className="w-4 h-4 animate-spin"/> Booking…</> : <>Confirm booking <Check className="w-4 h-4"/></>}
                   </button>
                 )}
@@ -417,7 +485,8 @@ function BookingFlow({ services, initialService, onDone }) {
             )}
           </div>
         </div>
-      </div>
+        </div>
+        </div>
     </section>
   )
 }
