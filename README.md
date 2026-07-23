@@ -1,46 +1,79 @@
-# Lumen — Liquid Glass Appointment Booking
+# Lumen — Liquid Glass Appointment Booking Platform
 
-A beautifully minimal appointment booking SPA built with **Next.js 15 (App Router)**, **Tailwind + shadcn/ui**, **MongoDB**, and **Google Calendar OAuth**. Features a signature *liquid glass* aesthetic with light/dark mode.
+A modern appointment scheduling application built with **Next.js 15**, **TypeScript**, **Tailwind CSS**, **shadcn/ui**, **MongoDB**, and **Google Calendar OAuth integration**.
+
+Designed with a premium liquid glass UI system, responsive layouts, timezone-aware scheduling, and seamless calendar synchronization.
+
+## 🌐 Live Demo
+
+[View Live Application](Comiong soon!)
+
+## 📸 Screenshots
+
+docs/images/Desktop-darkmode.png
+docs/images/Desktop-lightmode.png
+docs/images/iPad Air-darkmode.png
+docs/images/iPad Air-lightmode.png
+docs/images/Mobile-darkmode.png
+docs/images/Mobile-lightmode.png
 
 ## ✨ Features
 
-- **Elegant liquid glass UI** — frosted panels, gradient orbs, mint→teal→sky accent system.
-- **Light / Dark mode** with system-safe theme toggle (persisted in `localStorage`).
-- **End-to-end booking flow**: pick service → pick date on inline calendar → choose available time → enter details → confirm.
-- **My Bookings** modal with **Upcoming** and **Past** tabs (looked up by email).
-- **Cancel / Reschedule (edit)** any upcoming booking. Reschedules automatically PATCH the Google Calendar event when applicable.
-- **Google Calendar sync** (per-customer OAuth) — the confirmation screen has an *Add to Google Calendar* button that creates the event on the user’s own primary calendar. Correct timezone handling (each booking stores the customer’s IANA timezone).
-- **Timezone label** on booking cards, e.g. `11:00 EDT`, `15:30 IST`.
-- **MongoDB storage** with automatic slot-conflict prevention.
+### Booking Experience
+- Complete appointment booking workflow
+- Service selection, date selection, and availability management
+- Responsive booking experience across devices
 
-## 🗂 Project structure
+### Calendar Integration
+- Google Calendar OAuth integration
+- Create calendar events directly from bookings
+- Automatic event updates during rescheduling
 
-```
-app/
-├── app/
-│   ├── api/[[...path]]/route.js   # All backend endpoints (catch-all)
-│   ├── globals.css              # Tailwind + liquid-glass utilities + light/dark tokens
-│   ├── layout.js
-│   └── page.js                  # Full SPA (hero, services, booking, my-bookings)
-├── components/
-│   └── GcalToast.jsx            # Toast shown after Google Calendar OAuth returns
-├── lib/
-│   └── utils.js                 # Pure helpers (time math, tz label, booking split)
-├── __tests__/
-│   ├── utils.test.js            # Unit tests for the helpers
-│   └── GcalToast.test.jsx       # React Testing Library component test
-├── jest.config.js
-├── jest.setup.js
-├── package.json
-└── .env.example
-```
+### User Experience
+- Liquid glass design system
+- Light/dark theme support
+- Timezone-aware booking display
+
+### Engineering
+- Next.js App Router architecture
+- MongoDB persistence
+- Automated slot conflict prevention
+- Unit and component testing
+
+## 🛠 Tech Stack
+
+Frontend:
+- Next.js 15 (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+
+Backend:
+- Next.js Route Handlers
+- MongoDB
+
+Integrations:
+- Google Calendar OAuth
+
+Testing:
+- Jest
+- React Testing Library
+
+## 🏗 Architecture Overview
+
+The application follows a modern Next.js App Router architecture:
+
+- Server-side API routes handle bookings, availability, and integrations
+- MongoDB manages appointment persistence
+- Google OAuth enables calendar synchronization
+- Component-based UI architecture using Tailwind CSS and shadcn/ui
 
 ## 🚀 Local development
 
 ### 1. Prerequisites
 - Node.js ≥ 18
 - Yarn (or npm)
-- A running MongoDB (locally at `mongodb://localhost:27017` is the default)
 
 ### 2. Install dependencies
 ```bash
@@ -52,25 +85,22 @@ Copy the example env file and fill in values:
 ```bash
 cp .env.example .env
 ```
+Required environment variables:
 
-Minimum required values:
-```env
-MONGO_URL=mongodb://localhost:27017
-DB_NAME=lumen_appointments
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
+MONGO_URL=
+DB_NAME=
+NEXT_PUBLIC_BASE_URL=
 
-# Optional — required only for Google Calendar sync
+Optional:
+
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-```
-
-See **Google Calendar setup** below to obtain the OAuth credentials.
 
 ### 4. Run the dev server
 ```bash
 yarn dev
 ```
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000]
 
 ### 5. Run the tests
 ```bash
@@ -78,58 +108,34 @@ yarn test          # single run
 yarn test:watch    # watch mode
 yarn test:coverage # with coverage report
 ```
+## 📅 Google Calendar Integration
 
-## 📅 Google Calendar setup (optional)
+Google Calendar integration requires OAuth credentials.
 
-To enable the *Add to Google Calendar* button end-to-end:
+Steps:
 
-1. Open **https://console.cloud.google.com/** and create a project.
-2. Enable the **Google Calendar API** for that project.
-3. Configure the **OAuth consent screen** (External).
-   - Add your Gmail as a **Test user** while the app is still in Testing.
-4. Create an **OAuth 2.0 Client ID** → Application type: **Web application**.
-5. Add this exact **Authorized redirect URI**:
-   ```
-   http://localhost:3000/api/gcal/callback
-   ```
-   (In production, use your real domain.)
-6. Copy the **Client ID** and **Client secret** into `.env`:
-   ```env
-   GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
-   GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx
-   ```
-7. Restart the dev server.
+1. Create OAuth credentials in Google Cloud Console
+2. Enable Google Calendar API
+3. Add redirect URL:
 
-## 🔌 API reference
+## 🔌 Integrations
 
-All endpoints are served via a single catch-all Route Handler under `/api/...`.
-
-| Method | Endpoint                              | Description                                          |
-|--------|---------------------------------------|------------------------------------------------------|
-| GET    | `/api/services`                       | List all bookable services (seeded on first request) |
-| GET    | `/api/availability?date=YYYY-MM-DD`   | Available 30-min slots for a date                    |
-| POST   | `/api/bookings`                       | Create a new booking                                 |
-| GET    | `/api/bookings?email=you@x.com`       | List a customer’s bookings                           |
-| PATCH  | `/api/bookings/:id`                   | Reschedule / edit a booking (syncs to GCal)          |
-| DELETE | `/api/bookings/:id`                   | Cancel a booking                                     |
-| GET    | `/api/gcal/start?bookingId=...`       | Kick off Google Calendar OAuth flow                  |
-| GET    | `/api/gcal/callback`                  | OAuth callback (handled automatically)               |
+- Google Calendar OAuth
+- MongoDB database
+- REST API routes for booking management
 
 ## 🧪 Testing
 
-This repo uses **Jest** + **@testing-library/react** with `next/jest` for zero-config SWC transforms.
+Testing setup includes:
 
-- Unit tests live in `__tests__/*.test.{js,jsx}`.
-- The Jest config auto-loads the same path aliases (`@/...`) and CSS mocks Next.js uses.
-- To add more component tests, prefer extracting isolated components into `/components` (see `GcalToast.jsx` as an example) so they can be rendered in isolation.
+- Jest
+- React Testing Library
+- Next.js Jest integration
 
-### Sample test output
-```
-PASS  __tests__/utils.test.js
-PASS  __tests__/GcalToast.test.jsx
-Test Suites: 2 passed, 2 total
-Tests:       15 passed, 15 total
-```
+Current coverage includes:
+- Utility functions
+- React components
+
 
 ## 🛠 Scripts
 
@@ -142,6 +148,9 @@ Tests:       15 passed, 15 total
 | `yarn test`       | Run Jest test suite                        |
 | `yarn test:watch` | Jest in watch mode                         |
 | `yarn test:coverage` | Jest with coverage report               |
+
+
+
 
 ## 📄 License
 
