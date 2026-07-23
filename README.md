@@ -10,12 +10,14 @@ Designed with a premium liquid glass UI system, responsive layouts, timezone-awa
 
 ## 📸 Screenshots
 
-docs/images/Desktop-darkmode.png
-docs/images/Desktop-lightmode.png
-docs/images/iPad Air-darkmode.png
-docs/images/iPad Air-lightmode.png
-docs/images/Mobile-darkmode.png
-docs/images/Mobile-lightmode.png
+![Desktop dark mode](docs/images/Desktop-darkmode.png)
+![Desktop light mode](docs/images/Desktop-lightmode.png)
+
+![iPad Air dark mode](docs/images/iPad-air-darkmode.png)
+![iPad Air light mode](docs/images/iPad-air-lightmode.png)
+
+![Mobile dark mode](docs/images/Mobile-darkmode.png)
+![Mobile light mode](docs/images/Mobile-lightmode.png)
 
 ## ✨ Features
 
