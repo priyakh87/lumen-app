@@ -5,18 +5,18 @@ A modern appointment scheduling application built with **Next.js 15**, **TypeScr
 Designed with a premium liquid glass UI system, responsive layouts, timezone-aware scheduling, and seamless calendar synchronization.
 
 ## 🌐 Live Demo
-
-[View Live Application](Comiong soon!)
+https://bookquickappointments.netlify.app/
+<!-- [View Live Application](Comiong soon!) -->
 
 ## 📸 Screenshots
 
 ![Desktop dark mode](docs/images/Desktop-darkmode.png)
-![Desktop light mode](docs/images/Desktop-lightmode.png)
+<!-- ![Desktop light mode](docs/images/Desktop-lightmode.png)
 
 ![iPad Air dark mode](docs/images/iPad-air-darkmode.png)
 ![iPad Air light mode](docs/images/iPad-air-lightmode.png)
 
-![Mobile dark mode](docs/images/Mobile-darkmode.png)
+![Mobile dark mode](docs/images/Mobile-darkmode.png) -->
 ![Mobile light mode](docs/images/Mobile-lightmode.png)
 
 ## ✨ Features
