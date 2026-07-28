@@ -9,17 +9,30 @@ export const runtime = 'nodejs'
 
 const MONGO_URL = process.env.MONGO_URL
 const DB_NAME = process.env.DB_NAME || 'appointment_app'
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-const GCAL_REDIRECT = `${BASE_URL}/api/gcal/callback`
 const BOOKING_ACCESS_SECRET = process.env.BOOKING_ACCESS_SECRET || process.env.NEXTAUTH_SECRET || crypto.randomBytes(32).toString('hex')
 
 let cachedClient = null
 async function getDb() {
   if (!cachedClient) {
+    if (!MONGO_URL) throw new Error('Missing MONGO_URL. Add your MongoDB connection string to the deployment environment variables.')
     cachedClient = new MongoClient(MONGO_URL)
     await cachedClient.connect()
   }
   return cachedClient.db(DB_NAME)
+}
+
+function getBaseUrl(request) {
+  const configuredBaseUrl = (process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL || '').replace(/\/$/, '')
+  if (configuredBaseUrl) return configuredBaseUrl
+
+  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
+  if (host) return `${forwardedProto}://${host}`
+  return 'http://localhost:3000'
+}
+
+function getGoogleRedirectUri(request) {
+  return `${getBaseUrl(request)}/api/gcal/callback`
 }
 
 const DEFAULT_SERVICES = [
@@ -55,10 +68,10 @@ function getBookingAccessContext(request) {
   }
 }
 
-function oauthAuthUrl(state) {
+function oauthAuthUrl(state, redirectUri) {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID || '',
-    redirect_uri: GCAL_REDIRECT,
+    redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'https://www.googleapis.com/auth/calendar.events',
     access_type: 'offline',
@@ -69,12 +82,12 @@ function oauthAuthUrl(state) {
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
 }
 
-async function exchangeCodeForTokens(code) {
+async function exchangeCodeForTokens(code, redirectUri) {
   const body = new URLSearchParams({
     code,
     client_id: process.env.GOOGLE_CLIENT_ID || '',
     client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
-    redirect_uri: GCAL_REDIRECT,
+    redirect_uri: redirectUri,
     grant_type: 'authorization_code',
   })
   const res = await fetch('https://oauth2.googleapis.com/token', {
@@ -136,11 +149,21 @@ async function patchCalendarEvent(accessToken, eventId, patch) {
 
 async function handler(request, ctx) {
   const params = ctx?.params ? await ctx.params : {}
-  const path = params?.path || []
-  const route = '/' + path.join('/')
+  const rawPath = params?.path
+  const pathSegments = Array.isArray(rawPath)
+    ? rawPath
+    : (typeof rawPath === 'string' && rawPath ? rawPath.split('/').filter(Boolean) : [])
+  const route = '/' + pathSegments.join('/')
   const method = request.method
 
   try {
+    if (!MONGO_URL) {
+      if (route === '/services' && method === 'GET') {
+        return json({ services: DEFAULT_SERVICES })
+      }
+      return json({ error: 'Database is not configured. Add MONGO_URL to the deployment environment variables.' }, 500)
+    }
+
     const db = await getDb()
     await ensureSeed(db)
 
@@ -287,7 +310,8 @@ async function handler(request, ctx) {
         expiresAt: new Date(Date.now() + 10 * 60 * 1000),
       })
 
-      const client = oauthAuthUrl(state)
+      const redirectUri = getGoogleRedirectUri(request)
+      const client = oauthAuthUrl(state, redirectUri)
       return NextResponse.redirect(client)
     }
 
@@ -304,7 +328,8 @@ async function handler(request, ctx) {
       if (!stateRow) return json({ error: 'Invalid or expired state' }, 400)
       await db.collection('oauth_states').deleteOne({ state })
 
-      const tokens = await exchangeCodeForTokens(code)
+      const redirectUri = getGoogleRedirectUri(request)
+      const tokens = await exchangeCodeForTokens(code, redirectUri)
       const accessToken = tokens.access_token
 
       const booking = await db.collection('bookings').findOne({ id: stateRow.bookingId })
@@ -329,7 +354,8 @@ async function handler(request, ctx) {
         } }
       )
 
-      return NextResponse.redirect(`${BASE_URL}/?gcal=success&email=${encodeURIComponent(booking.email)}`)
+      const successUrl = `${getBaseUrl(request)}/?gcal=success&email=${encodeURIComponent(booking.email)}`
+      return NextResponse.redirect(successUrl)
     }
 
     if (route === '' || route === '/') return json({ ok: true, name: 'Lumen Appointment API' })

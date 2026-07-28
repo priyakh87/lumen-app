@@ -87,7 +87,19 @@ function App() {
   const [gcalStatus, setGcalStatus] = useState(null)
 
   useEffect(() => {
-    fetch('/api/services').then(r => r.json()).then(d => setServices(d.services || []))
+    async function loadServices() {
+      try {
+        const res = await fetch('/api/services')
+        if (!res.ok) throw new Error(`Services request failed with ${res.status}`)
+        const data = await res.json()
+        setServices(data.services || [])
+      } catch (error) {
+        console.error('Failed to load services:', error)
+        setServices([])
+      }
+    }
+
+    loadServices()
 
     const p = new URLSearchParams(window.location.search)
     const g = p.get('gcal')
