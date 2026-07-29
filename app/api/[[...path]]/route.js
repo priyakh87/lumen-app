@@ -32,7 +32,7 @@ function getBaseUrl(request) {
 }
 
 function getGoogleRedirectUri(request) {
-  return `${getBaseUrl(request)}/api/gcal/callback`
+  return `${getBaseUrl(request)}/api/auth/gcal/callback`
 }
 
 const DEFAULT_SERVICES = [
