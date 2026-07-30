@@ -2,10 +2,20 @@
 
 import {
   Clock, Sparkles, Palette, Compass, Cpu,
-  ChevronRight,
+  ChevronRight, Star, User, LayoutDashboard, SquarePlay
 } from 'lucide-react'
 
-const iconMap = { sparkles: Sparkles, palette: Palette, compass: Compass, cpu: Cpu }
+const iconMap = {
+  sparkles: Sparkles,
+  palette: Palette,
+  compass: Compass,
+  cpu: Cpu,
+  star: SquarePlay,
+  user: User,
+  dashboard: LayoutDashboard,
+  'layout-dashboard': LayoutDashboard,
+  'square-play': SquarePlay,
+}
 
 function applyTilt(event) {
   const el = event.currentTarget

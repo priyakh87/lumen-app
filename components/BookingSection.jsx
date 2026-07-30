@@ -20,10 +20,35 @@ import {
   ExternalLink,
   Pencil,
   RefreshCw,
+  Star,
+  LayoutDashboard,
+  SquarePlay,
 } from 'lucide-react'
 import { tzShort } from '@/lib/utils'
 
-const iconMap = { sparkles: Sparkles, palette: Palette, compass: Compass, cpu: Cpu }
+const iconMap = {
+  sparkles: Sparkles,
+  palette: Palette,
+  compass: Compass,
+  cpu: Cpu,
+  star: SquarePlay,
+  user: User,
+  dashboard: LayoutDashboard,
+  'layout-dashboard': LayoutDashboard,
+  'square-play': SquarePlay,
+}
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[0-9\s().-]{5,20}$/
+
+function isValidEmail(email) {
+  return emailRegex.test(String(email || '').trim())
+}
+
+function isValidPhone(phone) {
+  const value = String(phone || '').trim()
+  return value === '' || phoneRegex.test(value)
+}
 
 function fmtDate(d) {
   return d.toISOString().slice(0, 10)
@@ -381,15 +406,23 @@ function BookingFlow({ services, initialService, onDone }) {
       .finally(() => setLoadingSlots(false))
   }, [date, service])
 
+  const isEmailValid = isValidEmail(form.email)
+  const isPhoneValid = isValidPhone(form.phone)
   const canNext = (
     (step === 0 && service) ||
     (step === 1 && date && time) ||
-    (step === 2 && form.name && form.email)
+    (step === 2 && form.name && form.email && isEmailValid && isPhoneValid)
   )
 
   async function submit() {
     setSubmitting(true); setError('')
     try {
+      if (!isEmailValid) {
+        throw new Error('Enter a valid email address')
+      }
+      if (!isPhoneValid) {
+        throw new Error('Enter a valid phone number')
+      }
       const res = await fetch('/api/bookings', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -484,10 +517,12 @@ function BookingFlow({ services, initialService, onDone }) {
                   <label>
                     <div className="text-xs text-fg-muted mb-1 flex items-center gap-1"><Mail className="w-3 h-3"/> Email</div>
                     <input type="email" className="glass-input w-full rounded-xl px-4 py-3" placeholder="you@company.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                    {!isEmailValid && form.email && <p className="text-rose-500 text-xs mt-2">Enter a valid email address.</p>}
                   </label>
                   <label>
-                    <div className="text-xs text-fg-muted mb-1 flex items-center gap-1"><Phone className="w-3 h-3"/> Phone (optional</div>
+                    <div className="text-xs text-fg-muted mb-1 flex items-center gap-1"><Phone className="w-3 h-3"/> Phone (optional)</div>
                     <input className="glass-input w-full rounded-xl px-4 py-3" placeholder="+1 555 123 4567" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                    {form.phone && !isPhoneValid && <p className="text-rose-500 text-xs mt-2">Enter a valid phone number.</p>}
                   </label>
                   <label className="sm:col-span-2">
                     <div className="text-xs text-fg-muted mb-1 flex items-center gap-1"><MessageSquare className="w-3 h-3"/> Notes (optional)</div>

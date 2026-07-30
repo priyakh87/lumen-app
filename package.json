@@ -85,7 +85,8 @@
         "jest-environment-jsdom": "29.7.0",
         "postcss": "8",
         "tailwindcss": "3.4.1",
-        "typescript": "5.8.2"
+        "typescript": "5.8.2",
+        "migrate-mongo": "^8.0.0"
     },
     "resolutions": {
         "follow-redirects": "1.16.0",

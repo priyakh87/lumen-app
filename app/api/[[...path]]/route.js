@@ -35,11 +35,21 @@ function getGoogleRedirectUri(request) {
   return `${getBaseUrl(request)}/api/gcal/callback`
 }
 
+function isValidEmail(email) {
+  return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+}
+
+function isValidPhone(phone) {
+  if (!phone) return true
+  const normalized = String(phone).trim()
+  return /^[+]?[(]?[0-9]{1,4}[)]?[0-9\s().-]{5,20}$/.test(normalized)
+}
+
 const DEFAULT_SERVICES = [
-  { id: 'srv-consult', name: 'Strategy Consultation', duration: 30, price: 0, description: 'A focused 30-minute session to align on goals and next steps.', icon: 'sparkles', color: 'from-emerald-400 to-teal-400' },
-  { id: 'srv-design', name: 'Design Review', duration: 45, price: 120, description: 'Deep review of your product design with actionable recommendations.', icon: 'palette', color: 'from-teal-400 to-sky-400' },
-  { id: 'srv-coaching', name: 'Executive Coaching', duration: 60, price: 220, description: 'Personalized coaching to unlock leadership potential and clarity.', icon: 'compass', color: 'from-sky-400 to-indigo-400' },
-  { id: 'srv-tech', name: 'Tech Deep Dive', duration: 90, price: 300, description: 'Architecture, scaling and AI integration deep dive with an expert.', icon: 'cpu', color: 'from-emerald-400 to-sky-400' },
+  { id: 'srv-consult', name: 'Strategy Consultationnnn', duration: 30, price: 0, description: 'A focused 30-minute session to align on goals and next steps.', icon: 'sparkles', color: 'from-emerald-400 to-teal-400' },
+  { id: 'srv-design', name: 'Design Review', duration: 45, price: 0, description: 'Deep review of your product design with actionable recommendations.', icon: 'palette', color: 'from-teal-400 to-sky-400' },
+  { id: 'srv-coaching', name: 'Executive Coaching', duration: 60, price:0, description: 'Personalized coaching to unlock leadership potential and clarity.', icon: 'compass', color: 'from-sky-400 to-indigo-400' },
+  { id: 'srv-tech', name: 'Tech Deep Dive', duration: 90, price: 0, description: 'Architecture, scaling and AI integration deep dive with an expert.', icon: 'cpu', color: 'from-emerald-400 to-sky-400' },
 ]
 
 async function ensureSeed(db) {
@@ -188,6 +198,8 @@ async function handler(request, ctx) {
       const body = await request.json()
       const { serviceId, date, time, name, email, phone, notes, timeZone } = body
       if (!serviceId || !date || !time || !name || !email) return json({ error: 'Missing required fields' }, 400)
+      if (!isValidEmail(email)) return json({ error: 'Invalid email address' }, 400)
+      if (!isValidPhone(phone)) return json({ error: 'Invalid phone number' }, 400)
 
       const service = await db.collection('services').findOne({ id: serviceId }, { projection: { _id: 0 } })
       if (!service) return json({ error: 'Invalid service' }, 400)

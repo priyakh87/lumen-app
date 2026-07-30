@@ -1,0 +1,19 @@
+# Netlify configuration for this Next.js app
+# Build command and publish directory for the standalone Next build
+[build]
+  command = "yarn build"
+  publish = ".next/standalone"
+  environment = { NODE_ENV = "production" }
+
+# Production context: set a public base URL for redirects and OAuth
+[context.production.environment]
+  # Replace with your Netlify site URL or custom domain.
+  # Do NOT store secrets (DB connection, client secrets) here — set them in Netlify UI under Site settings → Environment.
+  NEXT_PUBLIC_BASE_URL = "https://bookquickappointments.netlify.app/"
+
+# NOTE: Set the following secrets in Netlify UI (Site → Settings → Build & deploy → Environment):
+# - MONGO_URL
+# - DB_NAME
+# - GOOGLE_CLIENT_ID
+# - GOOGLE_CLIENT_SECRET
+# - Any other private keys
