@@ -3,7 +3,6 @@
 [build]
   command = "yarn build"
   publish = ".next/standalone"
-  
 
 # Production context: set a public base URL for redirects and OAuth
 [context.production.environment]
