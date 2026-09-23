@@ -188,7 +188,9 @@ async function handler(request, ctx) {
       const serviceId = url.searchParams.get('serviceId')
       if (!date) return json({ error: 'date required' }, 400)
       const allSlots = generateSlots()
-      const bookings = await db.collection('bookings').find({ date, status: { $ne: 'cancelled' } }).toArray()
+      const query = { date, status: { $ne: 'cancelled' } }
+      if (serviceId) query.serviceId = serviceId
+      const bookings = await db.collection('bookings').find(query).toArray()
       const booked = new Set(bookings.map(b => b.time))
       const available = allSlots.map(t => ({ time: t, available: !booked.has(t) }))
       return json({ date, serviceId, slots: available })
@@ -204,8 +206,14 @@ async function handler(request, ctx) {
       const service = await db.collection('services').findOne({ id: serviceId }, { projection: { _id: 0 } })
       if (!service) return json({ error: 'Invalid service' }, 400)
 
-      const existing = await db.collection('bookings').findOne({ date, time, status: { $ne: 'cancelled' } })
-      if (existing) return json({ error: 'That time slot was just taken. Please pick another.' }, 409)
+      // Layer 1: Same service + same slot → slot was taken
+      const serviceConflict = await db.collection('bookings').findOne({ date, time, serviceId, status: { $ne: 'cancelled' } })
+      if (serviceConflict) return json({ error: 'That time slot was just taken. Please pick another.' }, 409)
+
+      // Layer 2: Same email + same date+time → personal double-booking
+      const normalizedEmail = (email || '').toLowerCase().trim()
+      const emailConflict = await db.collection('bookings').findOne({ date, time, email: normalizedEmail, status: { $ne: 'cancelled' } })
+      if (emailConflict) return json({ error: `You already have a booking at ${time} on ${date}. Please choose a different time.` }, 409)
 
       const { startLocal, endLocal } = computeSlot(date, time, service.duration)
       const booking = {
@@ -252,10 +260,19 @@ async function handler(request, ctx) {
 
       // Conflict check when rescheduling
       if (newDate !== booking.date || newTime !== booking.time) {
-        const clash = await db.collection('bookings').findOne({
-          date: newDate, time: newTime, status: { $ne: 'cancelled' }, id: { $ne: id },
+        // Layer 1: Same service + same slot → slot taken
+        const serviceClash = await db.collection('bookings').findOne({
+          date: newDate, time: newTime, serviceId: booking.serviceId,
+          status: { $ne: 'cancelled' }, id: { $ne: id },
         })
-        if (clash) return json({ error: 'That time slot is already taken. Pick another.' }, 409)
+        if (serviceClash) return json({ error: 'That time slot is already taken. Pick another.' }, 409)
+
+        // Layer 2: Same email + same date+time → personal double-booking
+        const emailClash = await db.collection('bookings').findOne({
+          date: newDate, time: newTime, email: booking.email,
+          status: { $ne: 'cancelled' }, id: { $ne: id },
+        })
+        if (emailClash) return json({ error: 'You already have a booking at that time. Pick another.' }, 409)
       }
 
       const { startLocal, endLocal } = computeSlot(newDate, newTime, booking.duration)

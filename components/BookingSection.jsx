@@ -51,7 +51,10 @@ function isValidPhone(phone) {
 }
 
 function fmtDate(d) {
-  return d.toISOString().slice(0, 10)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function humanDate(iso) {
@@ -431,7 +434,11 @@ function BookingFlow({ services, initialService, onDone }) {
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Booking failed')
+      if (!res.ok) {
+        // On time conflicts, go back to date/time step so user can pick another slot
+        if (res.status === 409) { setTime(''); setStep(1) }
+        throw new Error(data.error || 'Booking failed')
+      }
       if (typeof window !== 'undefined') {
         const accessValue = data.booking?.access || ''
         if (accessValue) window.localStorage.setItem('bookingAccess', accessValue)
