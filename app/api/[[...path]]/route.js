@@ -20,7 +20,6 @@ async function getDb() {
   }
   return cachedClient.db(DB_NAME)
 }
-
 function getBaseUrl(request) {
   const configuredBaseUrl = (process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL || '').replace(/\/$/, '')
   if (configuredBaseUrl) return configuredBaseUrl
