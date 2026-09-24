@@ -2,7 +2,7 @@
 # Build command and publish directory for the standalone Next build
 [build]
   command = "yarn build"
-  publish = ".next/standalone"
+  publish = ".next"
 
 # Production context: set a public base URL for redirects and OAuth
 [context.production.environment]
