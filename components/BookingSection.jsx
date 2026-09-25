@@ -19,12 +19,13 @@ import {
   X,
   ExternalLink,
   Pencil,
+  Trash2,
   RefreshCw,
   Star,
   LayoutDashboard,
   SquarePlay,
 } from 'lucide-react'
-import { tzShort } from '@/lib/utils'
+import { formatBookingDeleteMessage, tzShort } from '@/lib/utils'
 
 const iconMap = {
   sparkles: Sparkles,
@@ -184,7 +185,7 @@ function BookingCard({ b, onCancel, onEdit, showActions }) {
           ) : showActions ? (
             <div className="flex items-center gap-1">
               <button onClick={() => onEdit(b)} title="Edit / reschedule" className="text-xs text-fg-muted hover:text-fg transition glass rounded-lg p-1.5"><Pencil className="w-3 h-3" /></button>
-              <button onClick={() => onCancel(b.id)} className="text-xs text-fg-muted hover:text-rose-500 transition glass rounded-lg px-2 py-1">Cancel</button>
+              <button onClick={() => onCancel(b)} title="Delete booking" className="text-xs text-fg-muted hover:text-rose-500 transition glass rounded-lg p-1.5"><Trash2 className="w-3 h-3" /></button>
             </div>
           ) : (
             <span className="text-[10px] text-fg-subtle bg-black/5 dark:bg-white/5 px-2 py-1 rounded-lg">COMPLETED</span>
@@ -292,13 +293,14 @@ function EditBookingModal({ booking, onClose, onSaved }) {
   )
 }
 
-function BookingsModal({ open, onClose, initialEmail }) {
+function BookingsModal({ open, onClose, initialEmail, onHomeAfterDelete }) {
   const [email, setEmail] = useState(initialEmail || '')
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [tab, setTab] = useState('upcoming')
   const [editing, setEditing] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null)
   const [toast, setToast] = useState('')
 
   async function fetchBookings(e) {
@@ -316,12 +318,28 @@ function BookingsModal({ open, onClose, initialEmail }) {
     if (open && initialEmail) { setEmail(initialEmail); setTimeout(() => fetchBookings(), 50) }
   }, [open, initialEmail])
 
-  async function cancel(id) {
+  async function confirmDeleteBooking() {
+    if (!confirmDelete) return
+    const { id, serviceName, date, time } = confirmDelete
     const access = typeof window !== 'undefined' ? window.localStorage.getItem('bookingAccess') : ''
     const emailParam = encodeURIComponent((email || '').trim())
     const accessParam = encodeURIComponent(access || '')
-    await fetch(`/api/bookings/${id}?email=${emailParam}&access=${accessParam}`, { method: 'DELETE' })
-    fetchBookings()
+    try {
+      const res = await fetch(`/api/bookings/${id}?email=${emailParam}&access=${accessParam}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Delete failed')
+      setConfirmDelete(null)
+      setBookings((prev) => prev.filter((b) => b.id !== id))
+      const message = formatBookingDeleteMessage({ serviceName, date, time })
+      setToast(message)
+      setTimeout(() => setToast(''), 4000)
+      setTimeout(() => {
+        onHomeAfterDelete?.()
+      }, 500)
+    } catch (error) {
+      setToast(error.message || 'Could not delete booking.')
+      setTimeout(() => setToast(''), 4000)
+    }
   }
 
   const { upcoming, past } = useMemo(() => {
@@ -370,9 +388,32 @@ function BookingsModal({ open, onClose, initialEmail }) {
           {!loading && searched && list.length === 0 && (
             <div className="text-center text-fg-subtle py-8 text-sm">{tab === 'upcoming' ? 'No upcoming appointments.' : 'No past appointments.'}</div>
           )}
-          {list.map(b => <BookingCard key={b.id} b={b} onCancel={cancel} onEdit={(x) => setEditing(x)} showActions={tab === 'upcoming'} />)}
+          {list.map(b => <BookingCard key={b.id} b={b} onCancel={(booking) => setConfirmDelete(booking)} onEdit={(x) => setEditing(x)} showActions={tab === 'upcoming'} />)}
         </div>
       </div>
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => setConfirmDelete(null)} />
+          <div className="relative glass-strong rounded-3xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="text-sm text-fg-subtle">Delete booking</div>
+                <h3 className="text-xl font-semibold text-fg">Confirm cancellation</h3>
+              </div>
+              <button onClick={() => setConfirmDelete(null)} className="w-9 h-9 rounded-xl glass hover:scale-105 transition flex items-center justify-center"><X className="w-4 h-4 text-fg" /></button>
+            </div>
+            <div className="rounded-2xl glass-subtle p-4 text-sm text-fg-muted">
+              <div className="font-medium text-fg mb-2">{confirmDelete.serviceName}</div>
+              <div>{humanDate(confirmDelete.date)} · {confirmDelete.time}</div>
+            </div>
+            <p className="mt-4 text-sm text-fg-muted">This booking will be permanently removed from your records. This action cannot be undone.</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setConfirmDelete(null)} className="glass rounded-xl px-4 py-2 text-sm text-fg">Keep booking</button>
+              <button onClick={confirmDeleteBooking} className="rounded-xl bg-rose-500 text-white px-4 py-2 text-sm hover:scale-[1.02] transition">Delete booking</button>
+            </div>
+          </div>
+        </div>
+      )}
       {editing && (
         <EditBookingModal booking={editing} onClose={() => setEditing(null)} onSaved={(data) => {
           setEditing(null)
@@ -384,7 +425,7 @@ function BookingsModal({ open, onClose, initialEmail }) {
         }} />
       )}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[80] glass-strong rounded-2xl px-4 py-3 shadow-2xl text-sm text-fg flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500"/> {toast}</div>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] glass-strong rounded-2xl px-4 py-3 shadow-2xl text-sm text-fg flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500"/> {toast}</div>
       )}
     </div>
   )
@@ -590,11 +631,14 @@ function BookingFlow({ services, initialService, onDone }) {
   )
 }
 
-export default function BookingSection({ services, initialService, onDone, open, onClose, initialEmail }) {
+export default function BookingSection({ services, initialService, onDone, open, onClose, initialEmail, hideBookingFlow = false }) {
   return (
     <>
-      <BookingFlow services={services} initialService={initialService} onDone={onDone} />
-      <BookingsModal open={open} onClose={onClose} initialEmail={initialEmail} />
+      {!hideBookingFlow && <BookingFlow services={services} initialService={initialService} onDone={onDone} />}
+      <BookingsModal open={open} onClose={onClose} initialEmail={initialEmail} onHomeAfterDelete={() => {
+        onClose?.()
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }} />
     </>
   )
 }

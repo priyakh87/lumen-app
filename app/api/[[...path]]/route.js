@@ -317,8 +317,8 @@ async function handler(request, ctx) {
         return json({ error: 'Access denied' }, 403)
       }
 
-      await db.collection('bookings').updateOne({ id }, { $set: { status: 'cancelled' } })
-      return json({ ok: true })
+      await db.collection('bookings').deleteOne({ id })
+      return json({ ok: true, deleted: true })
     }
 
     // ==== Google Calendar OAuth ====

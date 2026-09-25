@@ -122,7 +122,18 @@ function App() {
       <Nav onOpenBookings={() => setShowBookings(true)} onStart={scrollToBook} theme={theme} toggle={toggle} />
       <Hero onStart={scrollToBook} />
       <Services services={services} onPick={pick} />
-      <BookingSection services={services} initialService={pickedService} onDone={(email) => { setLastEmail(email); setShowBookings(true) }} open={showBookings} onClose={() => setShowBookings(false)} initialEmail={lastEmail} />
+      <BookingSection
+        services={services}
+        initialService={pickedService}
+        hideBookingFlow={showBookings}
+        onDone={(email) => { setLastEmail(email); setShowBookings(true) }}
+        open={showBookings}
+        onClose={() => {
+          setShowBookings(false)
+          setLastEmail('')
+        }}
+        initialEmail={lastEmail}
+      />
       <Features />
       <Footer />
       <GcalToast status={gcalStatus} onClose={() => setGcalStatus(null)} />

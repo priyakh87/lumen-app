@@ -5,6 +5,7 @@ import {
   generateSlots,
   tzShort,
   splitBookings,
+  formatBookingDeleteMessage,
 } from '@/lib/utils'
 
 describe('lib/utils — time helpers', () => {
@@ -97,5 +98,20 @@ describe('lib/utils — splitBookings', () => {
     )
     expect(upcoming).toHaveLength(0)
     expect(past).toHaveLength(1)
+  })
+})
+
+describe('lib/utils — formatBookingDeleteMessage', () => {
+  test('creates a clear message with booking type, date, and time', () => {
+    const message = formatBookingDeleteMessage({
+      serviceName: 'Design Review',
+      date: '2026-07-20',
+      time: '10:30',
+    })
+
+    expect(message).toContain('Design Review')
+    expect(message).toContain('2026')
+    expect(message).toContain('10:30')
+    expect(message).toMatch(/Deleted your upcoming booking/i)
   })
 })
