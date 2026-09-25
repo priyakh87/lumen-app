@@ -4,6 +4,9 @@
   command = "yarn build"
   publish = ".next"
 
+[build.environment]
+  NODE_VERSION = "24"
+  
 # Production context: set a public base URL for redirects and OAuth
 [context.production.environment]
   # Replace with your Netlify site URL or custom domain.
