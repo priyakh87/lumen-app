@@ -53,3 +53,5 @@ export default function Hero({ onStart }) {
     </section>
   );
 }
+
+
