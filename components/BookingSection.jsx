@@ -219,7 +219,9 @@ function EditBookingModal({ booking, onClose, onSaved }) {
     setSaving(true); setError('')
     try {
       const access = typeof window !== 'undefined' ? window.localStorage.getItem('bookingAccess') : ''
-      const res = await fetch(`/api/bookings/${booking.id}?access=${encodeURIComponent(access || '')}`, {
+      const emailParam = encodeURIComponent((booking?.email || '').trim())
+      const accessParam = encodeURIComponent(access || '')
+      const res = await fetch(`/api/bookings/${booking.id}?email=${emailParam}&access=${accessParam}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date, time, notes }),
       })
@@ -316,7 +318,9 @@ function BookingsModal({ open, onClose, initialEmail }) {
 
   async function cancel(id) {
     const access = typeof window !== 'undefined' ? window.localStorage.getItem('bookingAccess') : ''
-    await fetch(`/api/bookings/${id}?access=${encodeURIComponent(access || '')}`, { method: 'DELETE' })
+    const emailParam = encodeURIComponent((email || '').trim())
+    const accessParam = encodeURIComponent(access || '')
+    await fetch(`/api/bookings/${id}?email=${emailParam}&access=${accessParam}`, { method: 'DELETE' })
     fetchBookings()
   }
 
